@@ -30,6 +30,7 @@ public class SecugenController {
     FileOutputStream fout = null;
     PrintStream fp = null;
     String base64Image=null;
+    String base64File=null;
 
 	//  public static SGDeviceInfoParam deviceInfo;
     //  private byte[] regMin1 = new byte[400];
@@ -45,7 +46,7 @@ public class SecugenController {
             // System.out.println(sgfplib);
         }
         else{
-            return new Secugen(false,"Device not found");
+            return new Secugen(false,"Device not found","file not created");
         }
 
         // Initializing secugen
@@ -145,7 +146,7 @@ public class SecugenController {
             else
             {
                 // System.out.println("ERROR: Fingerprint image capture failed for sample1.");
-                return new Secugen(false,"Error capturing fingerprint , try again");
+                return new Secugen(false,"Error capturing fingerprint , try again","file not created");
             }
     }
     catch(Exception e)
@@ -188,6 +189,12 @@ public class SecugenController {
                 fout.close();
                 fp = null;
                 fout = null;
+
+                File file = new File("sample1.iso19794");
+                byte[] loadedFile = loadFile(file);
+                byte[] encodedFile = Base64.getEncoder().encode(loadedFile);
+                base64File = new String(encodedFile);
+
             }
         }
         catch (IOException e)
@@ -206,7 +213,7 @@ public class SecugenController {
 
 
 
-        return new Secugen(true,base64Image);
+        return new Secugen(true,base64Image,base64File);
     
     
 }
@@ -229,6 +236,31 @@ public  void writeImage(byte[][] img , String imageName) {
     } catch (IOException e) {
         e.printStackTrace();
     }
+}
+
+
+private static byte[] loadFile(File file) throws IOException {
+    InputStream is = new FileInputStream(file);
+
+    long length = file.length();
+    if (length > Integer.MAX_VALUE) {
+        // File is too large
+    }
+    byte[] bytes = new byte[(int)length];
+    
+    int offset = 0;
+    int numRead = 0;
+    while (offset < bytes.length
+           && (numRead=is.read(bytes, offset, bytes.length-offset)) >= 0) {
+        offset += numRead;
+    }
+
+    if (offset < bytes.length) {
+        throw new IOException("Could not completely read file "+file.getName());
+    }
+
+    is.close();
+    return bytes;
 }
 
 }
