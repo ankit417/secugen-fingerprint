@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.RestController;
 import java.awt.image.BufferedImage;
 
 import java.io.*;
+import java.util.Base64;
+
 import javax.imageio.ImageIO;
 import SecuGen.FDxSDKPro.jni.*; 
 
@@ -27,6 +29,7 @@ public class SecugenController {
     byte[] ISOminutiaeBuffer2;
     FileOutputStream fout = null;
     PrintStream fp = null;
+    String base64Image=null;
 
 	//  public static SGDeviceInfoParam deviceInfo;
     //  private byte[] regMin1 = new byte[400];
@@ -115,6 +118,29 @@ public class SecugenController {
                     // System.out.println();
                 }
                 writeImage(buffer2D,imageName);
+
+                ////base 64 test
+                BufferedImage image = new BufferedImage(buffer2D.length, buffer2D[0].length, BufferedImage.TYPE_BYTE_GRAY);
+                for (int x = 0; x < buffer2D.length; x++) {
+                    for (int y = 0; y <buffer2D[0].length; y++) {
+                        image.setRGB(x, y, buffer2D[x][y]);
+                    }
+                }
+
+                ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                try{
+                    ImageIO.write(image, "png", bos);
+                    byte[] imageBytes = bos.toByteArray();
+
+                    base64Image = Base64.getEncoder().encodeToString(imageBytes);
+
+                    bos.close();
+                }catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                /////base 64 test ends here
+
             }
             else
             {
@@ -180,7 +206,7 @@ public class SecugenController {
 
 
 
-        return new Secugen(true,"Finger print registered");
+        return new Secugen(true,base64Image);
     
     
 }
