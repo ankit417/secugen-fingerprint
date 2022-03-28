@@ -1,5 +1,6 @@
 package com.example.rest.service;
 
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -28,6 +29,7 @@ public class VerifyFingerprintController {
     FileOutputStream fout = null;
     PrintStream fp = null;
 
+    @CrossOrigin(origins="http://localhost:3000")
     @GetMapping("/verify")
     public VerifyFinger verifyprint()
     {
@@ -37,7 +39,7 @@ public class VerifyFingerprintController {
             System.out.println(sgfplib);
         }
         else{
-            return new VerifyFinger("Cannot find device");
+            return new VerifyFinger(false,"Fingerprint device not found");
         }
 
                 // Initializing secugen
@@ -105,7 +107,7 @@ public class VerifyFingerprintController {
             else
             {
                 System.out.println("ERROR: Fingerprint image capture failed for sample1.");
-                return new VerifyFinger("Error capturing finger print image");
+                return new VerifyFinger(false,"Error capturing finger! try again");
             }
     }
     catch(IOException e)
@@ -197,7 +199,7 @@ public class VerifyFingerprintController {
         System.out.println("ISO-1  <> ISO-2 Match Score : [" + score[0] + "]");
 
 
-        return new VerifyFinger("finger print match: "+matched[0] + " and match score is: "+score[0]);
+        return new VerifyFinger(matched[0], "Match score : "+score[0]);
     }
     
 }

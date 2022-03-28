@@ -1,5 +1,6 @@
 package com.example.rest.service;
 
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -31,52 +32,53 @@ public class SecugenController {
     //  private byte[] regMin1 = new byte[400];
 
 
+    @CrossOrigin(origins="http://localhost:3000")
     @GetMapping("/fingerprint")
     public Secugen fingerprint()
     {
         JSGFPLib sgfplib = new JSGFPLib();
         if((sgfplib !=null) &&(sgfplib.jniLoadStatus!= SGFDxErrorCode.SGFDX_ERROR_JNI_DLLLOAD_FAILED))
         {
-            System.out.println(sgfplib);
+            // System.out.println(sgfplib);
         }
         else{
-            return new Secugen("Cannot find device");
+            return new Secugen(false,"Device not found");
         }
 
         // Initializing secugen
        err= sgfplib.Init(SGFDxDeviceName.SG_DEV_AUTO);
-       System.out.println("Initializing secugen : [" + err + "]");
+    //    System.out.println("Initializing secugen : [" + err + "]");
 
                ///////////////////////////////////////////////
         // GetMinexVersion()
         int[] extractorVersion = new int[1];
         int[] matcherVersion = new int[1];
-        System.out.println("Call GetMinexVersion()");
+        // System.out.println("Call GetMinexVersion()");
         err = sgfplib.GetMinexVersion(extractorVersion, matcherVersion);
-        System.out.println("GetMinexVersion returned : [" + err + "]");
-        System.out.println("Extractor version : [" + extractorVersion[0] + "]");
-        System.out.println("Matcher version : [" + matcherVersion[0] + "]");
+        // System.out.println("GetMinexVersion returned : [" + err + "]");
+        // System.out.println("Extractor version : [" + extractorVersion[0] + "]");
+        // System.out.println("Matcher version : [" + matcherVersion[0] + "]");
 
        // Opening device
-       System.out.println("Opening secugen device");
+    //    System.out.println("Opening secugen device");
 	//    err = sgfplib.OpenDevice(SGPPPortAddr.AUTO_DETECT);
 	   err = sgfplib.OpenDevice(2);
-       System.out.println("OpenDevice returned : [" + err + "]");
+    //    System.out.println("OpenDevice returned : [" + err + "]");
 
        SGDeviceInfoParam deviceInfo = new SGDeviceInfoParam();
        err = sgfplib.GetDeviceInfo(deviceInfo);
-      System.out.println(err );
-      System.out.println("\tdeviceInfo.DeviceSN:    [" + new String(deviceInfo.deviceSN()) + "]");
-      System.out.println("\tdeviceInfo.Brightness:  [" + deviceInfo.brightness + "]");
-      System.out.println("\tdeviceInfo.ComPort:     [" + deviceInfo.comPort + "]");
-      System.out.println("\tdeviceInfo.ComSpeed:    [" + deviceInfo.comSpeed + "]");
-      System.out.println("\tdeviceInfo.Contrast:    [" + deviceInfo.contrast + "]");
-      System.out.println("\tdeviceInfo.DeviceID:    [" + deviceInfo.deviceID + "]");
-      System.out.println("\tdeviceInfo.FWVersion:   [" + deviceInfo.FWVersion + "]");
-      System.out.println("\tdeviceInfo.Gain:        [" + deviceInfo.gain + "]");
-      System.out.println("\tdeviceInfo.ImageDPI:    [" + deviceInfo.imageDPI + "]");
-      System.out.println("\tdeviceInfo.ImageHeight: [" + deviceInfo.imageHeight + "]");
-      System.out.println("\tdeviceInfo.ImageWidth:  [" + deviceInfo.imageWidth + "]");
+    //   System.out.println(err );
+    //   System.out.println("\tdeviceInfo.DeviceSN:    [" + new String(deviceInfo.deviceSN()) + "]");
+    //   System.out.println("\tdeviceInfo.Brightness:  [" + deviceInfo.brightness + "]");
+    //   System.out.println("\tdeviceInfo.ComPort:     [" + deviceInfo.comPort + "]");
+    //   System.out.println("\tdeviceInfo.ComSpeed:    [" + deviceInfo.comSpeed + "]");
+    //   System.out.println("\tdeviceInfo.Contrast:    [" + deviceInfo.contrast + "]");
+    //   System.out.println("\tdeviceInfo.DeviceID:    [" + deviceInfo.deviceID + "]");
+    //   System.out.println("\tdeviceInfo.FWVersion:   [" + deviceInfo.FWVersion + "]");
+    //   System.out.println("\tdeviceInfo.Gain:        [" + deviceInfo.gain + "]");
+    //   System.out.println("\tdeviceInfo.ImageDPI:    [" + deviceInfo.imageDPI + "]");
+    //   System.out.println("\tdeviceInfo.ImageHeight: [" + deviceInfo.imageHeight + "]");
+    //   System.out.println("\tdeviceInfo.ImageWidth:  [" + deviceInfo.imageWidth + "]");
 
       //Turning LED On to let user know to put finger
     //   err = sgfplib.SetLedOn(true);
@@ -98,8 +100,8 @@ public class SecugenController {
         if (err == SGFDxErrorCode.SGFDX_ERROR_NONE)
             {
                 err = sgfplib.GetImageQuality(deviceInfo.imageWidth, deviceInfo.imageHeight, imageBuffer1, quality);
-                System.out.println("GetImageQuality returned : [" + err + "]");
-                System.out.println("Image Quality is : [" + quality[0] + "]");
+                // System.out.println("GetImageQuality returned : [" + err + "]");
+                // System.out.println("Image Quality is : [" + quality[0] + "]");
 
                 //create image png
                 byte[][] buffer2D = new byte[deviceInfo.imageHeight][deviceInfo.imageWidth];
@@ -116,13 +118,13 @@ public class SecugenController {
             }
             else
             {
-                System.out.println("ERROR: Fingerprint image capture failed for sample1.");
-                return new Secugen("Error capturing image");
+                // System.out.println("ERROR: Fingerprint image capture failed for sample1.");
+                return new Secugen(false,"Error capturing fingerprint , try again");
             }
     }
     catch(Exception e)
     {
-        System.out.println("Exception reading keyboard : " + e);
+        // System.out.println("Exception reading keyboard : " + e);
 
     }
 
@@ -130,25 +132,25 @@ public class SecugenController {
 
      ///////////////////////////////////////////////
     // Set Template format ISO19794
-    System.out.println("Call SetTemplateFormat(ISO19794)");
+    // System.out.println("Call SetTemplateFormat(ISO19794)");
     err = sgfplib.SetTemplateFormat(SGFDxTemplateFormat.TEMPLATE_FORMAT_ISO19794);
-    System.out.println("SetTemplateFormat returned : [" + err + "]");
+    // System.out.println("SetTemplateFormat returned : [" + err + "]");
 
         ///////////////////////////////////////////////
         // Get Max Template Size for ISO19794
-        System.out.println("Call GetMaxTemplateSize()");
+        // System.out.println("Call GetMaxTemplateSize()");
         err = sgfplib.GetMaxTemplateSize(maxSize);
-        System.out.println("GetMaxTemplateSize returned : [" + err + "]");
-        System.out.println("Max ISO19794 Template Size is : [" + maxSize[0] + "]");
+        // System.out.println("GetMaxTemplateSize returned : [" + err + "]");
+        // System.out.println("Max ISO19794 Template Size is : [" + maxSize[0] + "]");
         ///////////////////////////////////////////////
         // Greate ISO19794 Template for Finger1
         ISOminutiaeBuffer1 = new byte[maxSize[0]];
-        System.out.println("Call CreateTemplate()");
+        // System.out.println("Call CreateTemplate()");
         err = sgfplib.CreateTemplate(fingerInfo, imageBuffer1, ISOminutiaeBuffer1);
-        System.out.println("CreateTemplate returned : [" + err + "]");
+        // System.out.println("CreateTemplate returned : [" + err + "]");
         err = sgfplib.GetTemplateSize(ISOminutiaeBuffer1, size);
-        System.out.println("GetTemplateSize returned : [" + err + "]");
-        System.out.println("ISO19794 Template Size is : [" + size[0] + "]");
+        // System.out.println("GetTemplateSize returned : [" + err + "]");
+        // System.out.println("ISO19794 Template Size is : [" + size[0] + "]");
         try
         {
             if (err == SGFDxErrorCode.SGFDX_ERROR_NONE)
@@ -164,7 +166,7 @@ public class SecugenController {
         }
         catch (IOException e)
         {
-            System.out.println("Exception writing minutiae file : " + e);
+            // System.out.println("Exception writing minutiae file : " + e);
         }
 
 
@@ -172,13 +174,13 @@ public class SecugenController {
       
         ///////////////////////////////////////////////
         // CloseDevice()
-        System.out.println("Call CloseDevice()");
+        // System.out.println("Call CloseDevice()");
         err = sgfplib.CloseDevice();
-        System.out.println("CloseDevice returned : [" + err + "]");
+        // System.out.println("CloseDevice returned : [" + err + "]");
 
 
 
-        return new Secugen("Finger print registered");
+        return new Secugen(true,"Finger print registered");
     
     
 }
