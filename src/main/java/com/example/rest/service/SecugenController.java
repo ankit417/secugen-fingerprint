@@ -15,8 +15,6 @@ import SecuGen.FDxSDKPro.jni.*;
 @RestController
 public class SecugenController {
 
-    // private static final String DRIVER_CLASS = " SecuGen.FDxSDKPro.jni.JSGFPLib";
-    // public static JSGFPLib sgfplib = new JSGFPLib();
 	public static long check ;
 	public static long err ;
     byte[] imageBuffer1;
@@ -32,10 +30,6 @@ public class SecugenController {
     String base64Image=null;
     String base64File=null;
 
-	//  public static SGDeviceInfoParam deviceInfo;
-    //  private byte[] regMin1 = new byte[400];
-
-
     @CrossOrigin(origins="http://localhost:3000")
     @GetMapping("/fingerprint")
     public Secugen fingerprint()
@@ -49,43 +43,58 @@ public class SecugenController {
             return new Secugen(false,"Device not found","file not created");
         }
 
-        // Initializing secugen
+       /**
+        * INITIALIZING SECUGEN 
+        */
        err= sgfplib.Init(SGFDxDeviceName.SG_DEV_AUTO);
-    //    System.out.println("Initializing secugen : [" + err + "]");
 
-               ///////////////////////////////////////////////
-        // GetMinexVersion()
+        /**
+         * GETING MINEX VERSION
+         */
         int[] extractorVersion = new int[1];
         int[] matcherVersion = new int[1];
-        // System.out.println("Call GetMinexVersion()");
+        /**
+         * CALL MINEX VERSION GetMinexVersion()
+         */
         err = sgfplib.GetMinexVersion(extractorVersion, matcherVersion);
-        // System.out.println("GetMinexVersion returned : [" + err + "]");
-        // System.out.println("Extractor version : [" + extractorVersion[0] + "]");
-        // System.out.println("Matcher version : [" + matcherVersion[0] + "]");
+        /**
+         * EXTRACTOR VERSION , extractorVersion[0]
+         * MATCHER VERSION ,   matcherVersion[0]
+         */
 
-       // Opening device
-    //    System.out.println("Opening secugen device");
-	//    err = sgfplib.OpenDevice(SGPPPortAddr.AUTO_DETECT);
+
+       /**
+        * OPENING SECUGEN FINGER PRINT DEVICE , OpenDevice(number PORT)
+        *  AUTO DETECT PORT , OpenDevice(SGPPPortAddr.AUTO_DETECT)
+        */
 	   err = sgfplib.OpenDevice(2);
-    //    System.out.println("OpenDevice returned : [" + err + "]");
-
+    
+        /**
+         * GET DEVICE INFO
+         */
        SGDeviceInfoParam deviceInfo = new SGDeviceInfoParam();
        err = sgfplib.GetDeviceInfo(deviceInfo);
-    //   System.out.println(err );
-    //   System.out.println("\tdeviceInfo.DeviceSN:    [" + new String(deviceInfo.deviceSN()) + "]");
-    //   System.out.println("\tdeviceInfo.Brightness:  [" + deviceInfo.brightness + "]");
-    //   System.out.println("\tdeviceInfo.ComPort:     [" + deviceInfo.comPort + "]");
-    //   System.out.println("\tdeviceInfo.ComSpeed:    [" + deviceInfo.comSpeed + "]");
-    //   System.out.println("\tdeviceInfo.Contrast:    [" + deviceInfo.contrast + "]");
-    //   System.out.println("\tdeviceInfo.DeviceID:    [" + deviceInfo.deviceID + "]");
-    //   System.out.println("\tdeviceInfo.FWVersion:   [" + deviceInfo.FWVersion + "]");
-    //   System.out.println("\tdeviceInfo.Gain:        [" + deviceInfo.gain + "]");
-    //   System.out.println("\tdeviceInfo.ImageDPI:    [" + deviceInfo.imageDPI + "]");
-    //   System.out.println("\tdeviceInfo.ImageHeight: [" + deviceInfo.imageHeight + "]");
-    //   System.out.println("\tdeviceInfo.ImageWidth:  [" + deviceInfo.imageWidth + "]");
+       /**
+        * System.out.println(err)
+        * SERIAL NUMBER , new String(deviceInfo.deviceSN())
+        * BRIGHTNESS , deviceInfo.brightness
+        * PORT , deviceInfo.comPort
+        * SPEED , deviceInfo.comSpeed
+        * CONTRAST , deviceInfo.contrast
+        * DEVICEID , deviceInfo.deviceID
+        * FWVERSION , deviceInfo.FWVersion
+        * GAIN , deviceInfo.gain
+        * IMAGE DPI , deviceInfo.imageDPI
+        * IMAGE HEIGHT , deviceInfo.imageHeight
+        * IMAGE WIDTH , deviceInfo.imageWidth
+        */
 
-      //Turning LED On to let user know to put finger
-    //   err = sgfplib.SetLedOn(true);
+        /**
+         * TURNING LED ON/OFF
+         * TURN ON : sgfplib.SetLedOn(true)
+         * TURN OFF : sgfplib.SetLedOn(false)
+         * err = sgfplib.SetLedOn(true);
+         */
 
     int[] quality = new int[1];
     int[] maxSize = new int[1];
@@ -96,31 +105,51 @@ public class SecugenController {
     fingerInfo.ImpressionType = SGImpressionType.SG_IMPTYPE_LP;
     fingerInfo.ViewNumber = 1;
 
-    //Capturing first Image
+    /**
+     * CAPTURING FINGER PRINT IMAGE
+     */
     err =sgfplib.SetLedOn(true);
     imageBuffer1 = new byte[deviceInfo.imageHeight*deviceInfo.imageWidth];
     try{
         err = sgfplib.GetImage(imageBuffer1);
+
+        /**
+         * SGFDX_ERROR_NONE DENOTES SUCCESS IN CAPTURING FINGER PRINT
+         */
         if (err == SGFDxErrorCode.SGFDX_ERROR_NONE)
             {
+                /**
+                 * GETTING IMAGE QUALITY
+                 */
                 err = sgfplib.GetImageQuality(deviceInfo.imageWidth, deviceInfo.imageHeight, imageBuffer1, quality);
-                // System.out.println("GetImageQuality returned : [" + err + "]");
-                // System.out.println("Image Quality is : [" + quality[0] + "]");
-
-                //create image png
-                byte[][] buffer2D = new byte[deviceInfo.imageHeight][deviceInfo.imageWidth];
-                String imageName = "firstImage.png";
+                /**
+                 * System.out.println("GetImageQuality returned : [" + err + "]");
+                 * System.out.println("Image Quality is : [" + quality[0] + "]");
+                 */
+                
+                
+                
+                byte[][] buffer2D = new byte[deviceInfo.imageHeight][deviceInfo.imageWidth];  
                 for(int i=0;i<deviceInfo.imageHeight;i++) {
                     for(int j=0;j<deviceInfo.imageWidth;j++) {
                         buffer2D[i][j]=imageBuffer1[i*deviceInfo.imageWidth+j];
-                        // System.out.print(buffer2D[i][j]+" ,");
-                        //System.out.println(i+" ,"+j+" "+(i*deviceInfo.imageWidth+j));
                     }
-                    // System.out.println();
                 }
-                writeImage(buffer2D,imageName);
+                /**
+                 * CREATE PNG IMAGE 
+                 * START
+                 */
+                // String imageName = "fiNGERPRINGT.png";
+                // writeImage(buffer2D,imageName);
+                /**
+                 * ENDS
+                 * CREATE PNG IMAGE
+                 */
 
-                ////base 64 test
+                /**
+                 * CREATE BASE64 OF IMAGE
+                 * START
+                 */
                 BufferedImage image = new BufferedImage(buffer2D.length, buffer2D[0].length, BufferedImage.TYPE_BYTE_GRAY);
                 for (int x = 0; x < buffer2D.length; x++) {
                     for (int y = 0; y <buffer2D[0].length; y++) {
@@ -140,49 +169,73 @@ public class SecugenController {
                     e.printStackTrace();
                 }
 
-                /////base 64 test ends here
+                /**
+                 * ENDS
+                 * CREATE BASE64 IMAGE
+                 */
 
             }
             else
             {
-                // System.out.println("ERROR: Fingerprint image capture failed for sample1.");
+                /**
+                 * FAILED TO CAPTURE FINGER PRINT
+                 */
                 return new Secugen(false,"Error capturing fingerprint , try again","file not created");
             }
     }
     catch(Exception e)
     {
-        // System.out.println("Exception reading keyboard : " + e);
+        /**
+        * TURNING OFF LED
+        */
+        err =sgfplib.SetLedOn(false);
 
+        /**
+         * EXCEPTION OCCURED DURING CAPTURE
+         */
+        return new Secugen(false,"Error capturing fingerprint , try again","file not created");
     }
 
+    /**
+     * TURNING OFF LED
+     */
     err =sgfplib.SetLedOn(false);
 
-     ///////////////////////////////////////////////
-    // Set Template format ISO19794
-    // System.out.println("Call SetTemplateFormat(ISO19794)");
-    err = sgfplib.SetTemplateFormat(SGFDxTemplateFormat.TEMPLATE_FORMAT_ISO19794);
-    // System.out.println("SetTemplateFormat returned : [" + err + "]");
 
-        ///////////////////////////////////////////////
-        // Get Max Template Size for ISO19794
-        // System.out.println("Call GetMaxTemplateSize()");
+    /**
+     * SET TEMPLATE FORMAT ISO19794
+     */
+    err = sgfplib.SetTemplateFormat(SGFDxTemplateFormat.TEMPLATE_FORMAT_ISO19794);
+        /**
+         *  System.out.println("SetTemplateFormat returned : [" + err + "]");
+         */
+
+        /**
+         * GET MAX TEMPLATE SIZE FOR ISO19794
+         */
         err = sgfplib.GetMaxTemplateSize(maxSize);
-        // System.out.println("GetMaxTemplateSize returned : [" + err + "]");
-        // System.out.println("Max ISO19794 Template Size is : [" + maxSize[0] + "]");
-        ///////////////////////////////////////////////
-        // Greate ISO19794 Template for Finger1
+
+        /**
+         * MAX TEMPLATE SIZE = System.out.println("Max ISO19794 Template Size is : [" + maxSize[0] + "]")
+         */
+
+        /**
+         * CREATE ISO19794 TEMPLATE FOR FINGER
+         * Call CreateTemplate()
+         * CALL GetTemplateSize() TO GET THE SIZE OF CREATED TEMPLATE
+         * TEMPLATE SIZE = System.out.println("ISO19794 Template Size is : [" + size[0] + "]");
+         */
         ISOminutiaeBuffer1 = new byte[maxSize[0]];
-        // System.out.println("Call CreateTemplate()");
         err = sgfplib.CreateTemplate(fingerInfo, imageBuffer1, ISOminutiaeBuffer1);
-        // System.out.println("CreateTemplate returned : [" + err + "]");
         err = sgfplib.GetTemplateSize(ISOminutiaeBuffer1, size);
-        // System.out.println("GetTemplateSize returned : [" + err + "]");
-        // System.out.println("ISO19794 Template Size is : [" + size[0] + "]");
         try
         {
             if (err == SGFDxErrorCode.SGFDX_ERROR_NONE)
             {
-                fout = new FileOutputStream("sample" +"1.iso19794");
+                /**
+                 * SAVE FINGER PRINT TEMPLATE IN DISK
+                 */
+                fout = new FileOutputStream("fingerPrintTemplate.iso19794");
                 fp = new PrintStream(fout);
                 fp.write(ISOminutiaeBuffer1,0, size[0]);
                 fp.close();
@@ -190,7 +243,10 @@ public class SecugenController {
                 fp = null;
                 fout = null;
 
-                File file = new File("sample1.iso19794");
+                /**
+                 * LOAD FINGER PRINT TEMPLATE TO ENCODE TO BASE64
+                 */
+                File file = new File("fingerPrintTemplate.iso19794");
                 byte[] loadedFile = loadFile(file);
                 byte[] encodedFile = Base64.getEncoder().encode(loadedFile);
                 base64File = new String(encodedFile);
@@ -199,20 +255,26 @@ public class SecugenController {
         }
         catch (IOException e)
         {
-            // System.out.println("Exception writing minutiae file : " + e);
+            /**
+             * EXCEPTION
+             */
+            return new Secugen(false,"Error capturing fingerprint , try again","file not created");
         }
 
 
-
-      
-        ///////////////////////////////////////////////
-        // CloseDevice()
-        // System.out.println("Call CloseDevice()");
+        /**
+         * SET LED OFF BEFORE CLOSING DEVICE
+         */
+        err =sgfplib.SetLedOn(false);
+        /**
+         * CLOSING FINGER PRINT DEVICE
+         */
         err = sgfplib.CloseDevice();
-        // System.out.println("CloseDevice returned : [" + err + "]");
 
-
-
+        /**
+         * DELETE DISK'S TEMPLATE FILE
+         */
+        //TO DO HERE
         return new Secugen(true,base64Image,base64File);
     
     
@@ -220,6 +282,10 @@ public class SecugenController {
 
 
 
+/**
+ * 
+ * WRITING IMAGE TO THE DISK
+ */
 
 public  void writeImage(byte[][] img , String imageName) {
     String path = imageName;
@@ -238,6 +304,10 @@ public  void writeImage(byte[][] img , String imageName) {
     }
 }
 
+/**
+ * 
+ * LOADING FILE TO CONVERT TO BASE64
+ */
 
 private static byte[] loadFile(File file) throws IOException {
     InputStream is = new FileInputStream(file);
@@ -256,6 +326,7 @@ private static byte[] loadFile(File file) throws IOException {
     }
 
     if (offset < bytes.length) {
+        is.close();
         throw new IOException("Could not completely read file "+file.getName());
     }
 
