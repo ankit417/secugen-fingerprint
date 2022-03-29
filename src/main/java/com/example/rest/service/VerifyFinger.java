@@ -1,15 +1,23 @@
 package com.example.rest.service;
 
-public class VerifyFinger {
-    private final String verify;
+import java.util.HashMap;
+import java.util.Map;
 
-    public VerifyFinger(String verify)
+public class VerifyFinger {
+    private final boolean success;
+    private final String message;
+
+    public VerifyFinger(boolean success , String message)
     {
-        this.verify = verify;
+        this.success = success;
+        this.message = message;
     }
 
-    public String getFingerprint()
+    public Map<String, Object> getVerified()
     {
-        return verify;
+        HashMap<String , Object> map = new HashMap<>();
+        map.put("success",success);
+        map.put("message",message);
+        return map;
     }
 }

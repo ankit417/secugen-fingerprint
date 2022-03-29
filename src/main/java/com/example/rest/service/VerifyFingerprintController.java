@@ -1,12 +1,18 @@
 package com.example.rest.service;
 
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 // import java.awt.image.BufferedImage;
 
 import java.io.*;
 // import java.util.Scanner;
+import java.util.Base64;
 
 // import javax.imageio.ImageIO;
 import SecuGen.FDxSDKPro.jni.*; 
@@ -28,53 +34,66 @@ public class VerifyFingerprintController {
     FileOutputStream fout = null;
     PrintStream fp = null;
 
-    @GetMapping("/verify")
-    public VerifyFinger verifyprint()
+    @CrossOrigin(origins="http://localhost:3000")
+    @PostMapping("/verify")
+    @ResponseBody
+    public VerifyFinger verifyprint(@RequestBody String minutae)
     {
         JSGFPLib sgfplib = new JSGFPLib();
         if((sgfplib !=null) &&(sgfplib.jniLoadStatus!= SGFDxErrorCode.SGFDX_ERROR_JNI_DLLLOAD_FAILED))
         {
-            System.out.println(sgfplib);
+            // System.out.println(sgfplib);
         }
         else{
-            return new VerifyFinger("Cannot find device");
+            return new VerifyFinger(false,"Fingerprint device not found");
         }
 
-                // Initializing secugen
+       /**
+        * INITIALIZING SECUGEN
+        */
        err= sgfplib.Init(SGFDxDeviceName.SG_DEV_AUTO);
-       System.out.println("Initializing secugen : [" + err + "]");
 
-               ///////////////////////////////////////////////
-        // GetMinexVersion()
+        /**
+         * GETING MINEX VERSION
+         */
         int[] extractorVersion = new int[1];
         int[] matcherVersion = new int[1];
-        System.out.println("Call GetMinexVersion()");
+        /**
+         * CALL MINEX VERSION GetMinexVersion()
+         */
         err = sgfplib.GetMinexVersion(extractorVersion, matcherVersion);
-        System.out.println("GetMinexVersion returned : [" + err + "]");
-        System.out.println("Extractor version : [" + extractorVersion[0] + "]");
-        System.out.println("Matcher version : [" + matcherVersion[0] + "]");
+        /**
+         * EXTRACTOR VERSION , extractorVersion[0]
+         * MATCHER VERSION ,   matcherVersion[0]
+         */
 
-               // Opening device
-       System.out.println("Opening secugen device");
-       //    err = sgfplib.OpenDevice(SGPPPortAddr.AUTO_DETECT);
-          err = sgfplib.OpenDevice(2);
-          System.out.println("OpenDevice returned : [" + err + "]");
-   
+       /**
+        * OPENING SECUGEN FINGER PRINT DEVICE , OpenDevice(number PORT)
+        *  AUTO DETECT PORT , OpenDevice(SGPPPortAddr.AUTO_DETECT)
+        */
+        err = sgfplib.OpenDevice(2);
+
+        /**
+         * GET DEVICE INFO
+         */
+
           SGDeviceInfoParam deviceInfo = new SGDeviceInfoParam();
           err = sgfplib.GetDeviceInfo(deviceInfo);
-         System.out.println(err );
-         System.out.println("\tdeviceInfo.DeviceSN:    [" + new String(deviceInfo.deviceSN()) + "]");
-         System.out.println("\tdeviceInfo.Brightness:  [" + deviceInfo.brightness + "]");
-         System.out.println("\tdeviceInfo.ComPort:     [" + deviceInfo.comPort + "]");
-         System.out.println("\tdeviceInfo.ComSpeed:    [" + deviceInfo.comSpeed + "]");
-         System.out.println("\tdeviceInfo.Contrast:    [" + deviceInfo.contrast + "]");
-         System.out.println("\tdeviceInfo.DeviceID:    [" + deviceInfo.deviceID + "]");
-         System.out.println("\tdeviceInfo.FWVersion:   [" + deviceInfo.FWVersion + "]");
-         System.out.println("\tdeviceInfo.Gain:        [" + deviceInfo.gain + "]");
-         System.out.println("\tdeviceInfo.ImageDPI:    [" + deviceInfo.imageDPI + "]");
-         System.out.println("\tdeviceInfo.ImageHeight: [" + deviceInfo.imageHeight + "]");
-         System.out.println("\tdeviceInfo.ImageWidth:  [" + deviceInfo.imageWidth + "]");
-
+       /**
+        * System.out.println(err)
+        * SERIAL NUMBER , new String(deviceInfo.deviceSN())
+        * BRIGHTNESS , deviceInfo.brightness
+        * PORT , deviceInfo.comPort
+        * SPEED , deviceInfo.comSpeed
+        * CONTRAST , deviceInfo.contrast
+        * DEVICEID , deviceInfo.deviceID
+        * FWVERSION , deviceInfo.FWVersion
+        * GAIN , deviceInfo.gain
+        * IMAGE DPI , deviceInfo.imageDPI
+        * IMAGE HEIGHT , deviceInfo.imageHeight
+        * IMAGE WIDTH , deviceInfo.imageWidth
+        */
+          
          int[] quality = new int[1];
          int[] maxSize = new int[1];
          int[] size = new int[1];
@@ -84,120 +103,121 @@ public class VerifyFingerprintController {
          fingerInfo.ImpressionType = SGImpressionType.SG_IMPTYPE_LP;
          fingerInfo.ViewNumber = 1;
 
-             //Capturing first Image
+    /**
+     * CAPTURING FINGER PRINT IMAGE
+     */
     err =sgfplib.SetLedOn(true);
     imageBuffer1 = new byte[deviceInfo.imageHeight*deviceInfo.imageWidth];
     try{
         err = sgfplib.GetImage(imageBuffer1);
+        /**
+         * SGFDX_ERROR_NONE DENOTES SUCCESS IN CAPTURING FINGER PRINT
+         */
+
         if (err == SGFDxErrorCode.SGFDX_ERROR_NONE)
             {
+                /**
+                 * GETTING IMAGE QUALITY
+                 */
+
                 err = sgfplib.GetImageQuality(deviceInfo.imageWidth, deviceInfo.imageHeight, imageBuffer1, quality);
-                System.out.println("GetImageQuality returned : [" + err + "]");
-                System.out.println("Image Quality is : [" + quality[0] + "]");
-                fout = new FileOutputStream("sample" + "1.raw");
-                fp = new PrintStream(fout);
-                fp.write(imageBuffer1,0, imageBuffer1.length);
-                fp.close();
-                fout.close();
-                fp = null;
-                fout = null;
+                /**
+                 * System.out.println("GetImageQuality returned : [" + err + "]");
+                 * System.out.println("Image Quality is : [" + quality[0] + "]");
+                 */
             }
             else
             {
-                System.out.println("ERROR: Fingerprint image capture failed for sample1.");
-                return new VerifyFinger("Error capturing finger print image");
+              /**
+                * TURNING OFF LED
+                */
+                err =sgfplib.SetLedOn(false);
+
+                // System.out.println("ERROR: Fingerprint image capture failed for sample1.");
+                return new VerifyFinger(false,"Error capturing finger! try again");
             }
     }
-    catch(IOException e)
+    catch(Exception e)
     {
-        System.out.println("Exception reading keyboard : " + e);
+        /**
+         * TURNING OFF LED
+         */
+        err =sgfplib.SetLedOn(false);
+        // System.out.println("Exception reading keyboard : " + e);
+        return new VerifyFinger(false,"Error capturing finger! try again");
 
     }
-
-    err =sgfplib.SetLedOn(false);
-         ///////////////////////////////////////////////
-    // Set Template format ISO19794
-    System.out.println("Call SetTemplateFormat(ISO19794)");
+        /**
+         * TURNING OFF LED
+         */
+        err =sgfplib.SetLedOn(false);
+    /**
+     * SET TEMPLATE FORMAT ISO19794
+     */
     err = sgfplib.SetTemplateFormat(SGFDxTemplateFormat.TEMPLATE_FORMAT_ISO19794);
-    System.out.println("SetTemplateFormat returned : [" + err + "]");
+        /**
+         *  System.out.println("SetTemplateFormat returned : [" + err + "]");
+        */
 
-        ///////////////////////////////////////////////
-        // Get Max Template Size for ISO19794
-        System.out.println("Call GetMaxTemplateSize()");
+        /**
+         * GET MAX TEMPLATE SIZE FOR ISO19794
+         */
         err = sgfplib.GetMaxTemplateSize(maxSize);
-        System.out.println("GetMaxTemplateSize returned : [" + err + "]");
-        System.out.println("Max ISO19794 Template Size is : [" + maxSize[0] + "]");
+        /**
+         * MAX TEMPLATE SIZE = System.out.println("Max ISO19794 Template Size is : [" + maxSize[0] + "]")
+         */
 
-                ///////////////////////////////////////////////
-        // Greate ISO19794 Template for Finger1
-        ISOminutiaeBuffer1 = new byte[maxSize[0]];
-        System.out.println("Call CreateTemplate()");
+ 
+        /**
+         * CREATE ISO19794 TEMPLATE FOR FINGER
+         * Call CreateTemplate()
+         * CALL GetTemplateSize() TO GET THE SIZE OF CREATED TEMPLATE
+         * TEMPLATE SIZE = System.out.println("ISO19794 Template Size is : [" + size[0] + "]");
+         */
+       
+         ISOminutiaeBuffer1 = new byte[maxSize[0]];
         err = sgfplib.CreateTemplate(fingerInfo, imageBuffer1, ISOminutiaeBuffer1);
-        System.out.println("CreateTemplate returned : [" + err + "]");
         err = sgfplib.GetTemplateSize(ISOminutiaeBuffer1, size);
-        System.out.println("GetTemplateSize returned : [" + err + "]");
-        System.out.println("ISO19794 Template Size is : [" + size[0] + "]");
-        try
-        {
-            if (err == SGFDxErrorCode.SGFDX_ERROR_NONE)
-            {
-                fout = new FileOutputStream("verify" +"1.iso19794");
-                fp = new PrintStream(fout);
-                fp.write(ISOminutiaeBuffer1,0, size[0]);
-                fp.close();
-                fout.close();
-                fp = null;
-                fout = null;
-            }
-        }
-        catch (IOException e)
-        {
-            System.out.println("Exception writing minutiae file : " + e);
-        }
+      
 
 
-        //Import previous sample data
+        /**
+         * CREATE TEMPLATE FROM MINUTAE DATA FROM POST REQUEST AND LOAD IT TO BUFFER
+         * 
+         */
         ISOminutiaeBuffer2 = new byte[maxSize[0]];
-        System.out.println("Importing template");
 
         try{
-            File samplePath = new File("sample1.iso19794");
-            FileInputStream previousSample = new FileInputStream(samplePath);
-            byte[] readPrevSamp = new byte[(int)samplePath.length()];
-            previousSample.read(readPrevSamp);
-            ISOminutiaeBuffer2=readPrevSamp;
-            previousSample.close();
+
+            /**
+             * DECODING BASE64 ENCODED MINUTAE DATA
+             */
+            byte[] decodeDMinutae = Base64.getDecoder().decode(minutae);
+
+            /**
+             * LOADING DECODED MINUTAE TO BUFFER
+             */
+            ISOminutiaeBuffer2=decodeDMinutae;
         }
-        catch(IOException e)
+        catch(Exception e)
         {
-            System.out.println("Khai k ho i dont know");
+            return new VerifyFinger(false,"Error verifying fingerprint! try again");
         }
 
         boolean[] matched = new boolean[1];
         int[] score = new int[1];
 
-        System.out.println("$$$$$$$$$$$$$ " + ISOminutiaeBuffer2);
-                ///////////////////////////////////
-        //Match ISO19794 Templates
-        System.out.println("--------");
+        /**
+         * MATCHING ISO TEMPLATES
+         */
         matched[0] = false;
         score[0] = 0;
-        System.out.println("Call SetTemplateFormat(ISO19794)");
         err = sgfplib.SetTemplateFormat(SGFDxTemplateFormat.TEMPLATE_FORMAT_ISO19794);
-        System.out.println("SetTemplateFormat returned : [" + err + "]");
-        System.out.println("Call MatchIsoTemplates()");
+
         err = sgfplib.MatchTemplate(ISOminutiaeBuffer1, ISOminutiaeBuffer2, SGFDxSecurityLevel.SL_NORMAL, matched);
-        // err = sgfplib.MatchIsoTemplate(ISOminutiaeBuffer1, 0, ISOminutiaeBuffer2, 0, SGFDxSecurityLevel.SL_NORMAL, matched);
-        System.out.println("MatchISOTemplates returned : [" + err + "]");
-        System.out.println("ISO-1 <> ISO-2 Match Result : [" + matched[0] + "]");
-        System.out.println("Call GetIsoMatchingScore()");
         err = sgfplib.GetMatchingScore(ISOminutiaeBuffer1, ISOminutiaeBuffer2,score);
-        // err = sgfplib.GetIsoMatchingScore(ISOminutiaeBuffer1, 0, ISOminutiaeBuffer2, 0, score);
-        System.out.println("GetIsoMatchingScore returned : [" + err + "]");
-        System.out.println("ISO-1  <> ISO-2 Match Score : [" + score[0] + "]");
 
-
-        return new VerifyFinger("finger print match: "+matched[0] + " and match score is: "+score[0]);
+        return new VerifyFinger(matched[0], "Match score : "+score[0]);
     }
     
 }

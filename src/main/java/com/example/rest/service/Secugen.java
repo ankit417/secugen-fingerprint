@@ -1,15 +1,25 @@
 package com.example.rest.service;
 
-public class Secugen {
-    private final String start;
+import java.util.HashMap;
+import java.util.Map;
 
-    public Secugen(String start)
+public class Secugen {
+    private final boolean success;
+    private final String message;
+    private final String file;
+    public Secugen(boolean success , String message , String file)
     {
-        this.start = start;
+        this.success=success;
+        this.message = message;
+        this.file = file;
     }
 
-    public String getStarted()
+    public Map<String,Object> getFingerprint()
     {
-        return start;
+        HashMap<String,Object> map = new HashMap<>();
+        map.put("success",success);
+        map.put("message",message);
+        map.put("file",file);
+        return map;
     }
 }
