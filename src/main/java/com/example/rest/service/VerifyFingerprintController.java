@@ -17,6 +17,7 @@ import java.util.Base64;
 // import javax.imageio.ImageIO;
 import SecuGen.FDxSDKPro.jni.*; 
 
+
 @RestController
 public class VerifyFingerprintController {
 
@@ -34,7 +35,8 @@ public class VerifyFingerprintController {
     FileOutputStream fout = null;
     PrintStream fp = null;
 
-    @CrossOrigin(origins="http://localhost:3000")
+    // @CrossOrigin(origins="http://localhost:3000")
+    @CrossOrigin(origins="*")
     @PostMapping("/verify")
     @ResponseBody
     public VerifyFinger verifyprint(@RequestBody String minutae)
