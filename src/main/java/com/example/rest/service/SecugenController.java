@@ -11,6 +11,7 @@ import java.util.Base64;
 
 import javax.imageio.ImageIO;
 import SecuGen.FDxSDKPro.jni.*; 
+import SecuGen.FDxSDKPro.jni.JSGFPLib; 
 
 @RestController
 public class SecugenController {
@@ -30,7 +31,7 @@ public class SecugenController {
     String base64Image=null;
     String base64File=null;
 
-    @CrossOrigin(origins="http://localhost:3000")
+    @CrossOrigin(origins="*", allowedHeaders="*")
     @GetMapping("/fingerprint")
     public Secugen fingerprint()
     {
@@ -67,7 +68,9 @@ public class SecugenController {
         * OPENING SECUGEN FINGER PRINT DEVICE , OpenDevice(number PORT)
         *  AUTO DETECT PORT , OpenDevice(SGPPPortAddr.AUTO_DETECT)
         */
-	   err = sgfplib.OpenDevice(2);
+	//    err = sgfplib.OpenDevice(2);
+	   err = sgfplib.OpenDevice(SGPPPortAddr.AUTO_DETECT);
+    //    System.out.println("sgpp port address sglip :" + err);
     
         /**
          * GET DEVICE INFO
